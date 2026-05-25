@@ -36,6 +36,9 @@ MANZANA = 3
 FILAS = 15
 COLUMNAS = 15
 
+# Maximo de pasos antes de perder 
+MAX_PASOS = 50
+
 
 def aparecer_aleatorio(tablero, id_elem):
     """
@@ -351,7 +354,7 @@ def main():
     pos_jugador = (0, 0)
     direccion = (0, 0)
     tiempo_ultimo_mov = 0
-
+    pasos = 0
     mostrar_pantalla(screen, PANTALLA_INICIO)
 
     # Este es el bucle principal del juego, todo lo que sucede en el juego
@@ -368,6 +371,7 @@ def main():
                 if estado == ESTADO_INICIO:
                     if evento.key == pygame.K_SPACE:
                         tablero, pos_jugador = reiniciar()
+                        pasos 
                         direccion = (0, 0)
                         # Obtiene tiempo en milisegundos
                         tiempo_ultimo_mov = pygame.time.get_ticks()
@@ -384,6 +388,7 @@ def main():
                 elif estado in (ESTADO_DERROTA, ESTADO_VICTORIA):
                     if evento.key == pygame.K_r:
                         tablero, pos_jugador = reiniciar()
+                        pasos = 0
                         direccion = (0, 0)
                         tiempo_ultimo_mov = pygame.time.get_ticks()
                         estado = ESTADO_JUGANDO
@@ -410,12 +415,20 @@ def main():
                 elif resultado == "victoria":
                     estado = ESTADO_VICTORIA
                     mostrar_pantalla(screen, PANTALLA_VICTORIA)
-                else:
-                    tiempo_ultimo_mov = tiempo_actual
-                    refrescar_tablero(screen, tablero)
+                else: 
+                    tiempo_ultimo_mov = tiempo_actual 
+                    pasos += 1 
+                    restantes = MAX_PASOS- pasos
+                    pygame.display.set_caption(f"Juego- Pasos restantes: {restantes }") 
+                    if pasos >= MAX_PASOS: 
+                        estado = ESTADO_DERROTA 
+                        mostrar_pantalla(screen, PANTALLA_DERROTA) 
+                    else:
+                         refrescar_tablero(screen, tablero)
 
     pygame.quit()
 
 
 if __name__ == "__main__":
     main()
+
