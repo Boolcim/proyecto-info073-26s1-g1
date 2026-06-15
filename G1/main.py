@@ -1,7 +1,6 @@
 # Importamos módulos requeridos
 import os
 import random
-
 import pygame
 
 # Estados del juego
@@ -27,11 +26,17 @@ PANTALLA_NIVEL3 = "fondo_3.jpeg"
 # Para evitar que el jugador se mueva demasiado rápido
 RETRASO = 200
 
+RETRASO_ENEMIGOS_PRIMER = 500
+
 # Códigos de cada elemento del tablero
 VACIO = 0
 OBSTACULO = 1
 JUGADOR = 2
 MANZANA = 3
+
+CANT_ENEMIGOS = 2
+
+largo_victoria = 5
 
 # Tamaño del tablero
 # Si se cambian estas constantes, se debe modificar la definición
@@ -39,9 +44,17 @@ MANZANA = 3
 FILAS = 15
 COLUMNAS = 15
 
+#tamaño de la ventana (en pixeles)
+ANCHO_VENTANA = 1040
+ALTO_VENTANA = 800
 
+#el tablero es un cuadrado fijo, independiente de la ventana
+LADO_TABLERO=800
 
-def aparecer_aleatorio(tablero, id_elem):
+#lo que sobra a la derecha de la ventana es el ancho del panel
+ANCHO_PANEL = ANCHO_VENTANA - LADO_TABLERO
+
+def aparecer_aleatorio(tablero, id_elem, incluir_borde=True):
     """
     Coloca un elemento en una casilla vacía aleatoria del tablero.
 
@@ -58,6 +71,8 @@ def aparecer_aleatorio(tablero, id_elem):
     # en las que un elemento "VACIO" (el número 0 en este caso) se encuentre.
     vacios = []
 
+    filas_rango = range(FILAS) if incluir_borde else range(1, FILAS - 1)
+    columnas_rango = range(COLUMNAS) if incluir_borde else range(1, COLUMNAS - 1)
     # Forma vista en clases de recorrer el arreglo multidimensional.
     # Tanto fila como columna son números.
     for fila in range(FILAS):
@@ -96,17 +111,18 @@ def aparecer_aleatorio(tablero, id_elem):
 
 
 def poblar_tablero(tablero):
+    for _ in range(CANT_ENEMIGOS):
+        aparecer_aleatorio(tablero, OBSTACULO, False)
     """
     Coloca un obstáculo y la manzana en el tablero.
 
     Parámetros:
         - tablero: El tablero con sus posiciones actuales.
     """
-    aparecer_aleatorio(tablero, OBSTACULO)
     aparecer_aleatorio(tablero, MANZANA)
 
 
-def refrescar_tablero(screen, tablero):
+def refrescar_tablero(screen, tablero, img_personaje):
     """
     Dibuja el estado actual del tablero en la pantalla.
 
@@ -150,7 +166,7 @@ def refrescar_tablero(screen, tablero):
             elif tablero[i][j] == JUGADOR:
                 # Dibujamos un círculo verde en la posición (pos_x + radio, pos_y + radio),
                 # con un radio definido por la variable "radio" (ancho_elem / 2).
-                screen.blit(pers, [ pos_x , pos_y ])
+                screen.blit(img_personaje, [ pos_x , pos_y ])
             elif tablero[i][j] == MANZANA:
                 pygame.draw.rect(
                     screen,
@@ -181,24 +197,30 @@ def mover_enemigo():
     ])
 
 
-def avanzar_enemigo(tablero, pos_enemigo):
-    col, fila = pos_enemigo
+def avanzar_enemigos(tablero, pos_enemigos):
+    print(pos_enemigos)
+    for i in range(len(pos_enemigos)):
+        pos_enemigo = pos_enemigos[i]
+        print(pos_enemigo)
 
-    dir_col, dir_fila = mover_enemigo()
+        col, fila = pos_enemigo
 
-    nueva_col = col + dir_col
-    nueva_fila = fila + dir_fila
+        dir_col, dir_fila = mover_enemigo()
 
-    if 0 <= nueva_col < COLUMNAS and 0 <= nueva_fila < FILAS:
+        nueva_col = col + dir_col
+        nueva_fila = fila + dir_fila
 
-        if tablero[nueva_fila][nueva_col] == VACIO:
+        if 0 <= nueva_col < COLUMNAS and 0 <= nueva_fila < FILAS:
 
-            tablero[fila][col] = VACIO
-            tablero[nueva_fila][nueva_col] = OBSTACULO
+            if tablero[nueva_fila][nueva_col] == VACIO:
 
-            return (nueva_col, nueva_fila)
+                tablero[fila][col] = VACIO
+                tablero[nueva_fila][nueva_col] = OBSTACULO
+                pos_enemigos[i] = (nueva_col, nueva_fila)
 
-    return pos_enemigo
+                
+    print("AAAAA " +str(pos_enemigos))
+    return pos_enemigos
 
 def cambiar_direccion(keys, direccion_actual):
     """
@@ -328,14 +350,18 @@ def reiniciar():
     # tablero = [[VACIO] * COLUMNAS for _ in range(FILAS)]
     # El _ en el "for" indica que no usamos la variable con la que iteramos.
 
-    pos_enemigo = aparecer_aleatorio(tablero, OBSTACULO)
+    pos_enemigos = []
+
+    for _ in range(CANT_ENEMIGOS):
+        pos_enemigos.append(aparecer_aleatorio(tablero, OBSTACULO))
+
     aparecer_aleatorio(tablero, MANZANA)
 
     # Colocamos al jugador en una posición aleatoria.
-    tablero[10][1] = JUGADOR
+    tablero[10][1] = JUGADOR 
     pos_jugador = (1, 10)
 
-    return tablero, pos_jugador, pos_enemigo
+    return tablero, pos_jugador, pos_enemigos
 
 
 def mostrar_pantalla(screen, nombre_archivo):
@@ -385,7 +411,16 @@ def main():
     pos_jugador = (0, 0)
     direccion = (0, 0)
     tiempo_ultimo_mov = 0
+    tiempo_enemigos = 0
     mostrar_pantalla(screen, PANTALLA_INICIO)
+    pos_enemigos= [(100, 100), (200, 200)]
+
+    img_arriba = pygame.image.load("assets/personaje/personaje_frontal.png").convert_alpha()
+    img_abajo = pygame.image.load("assets/personaje/personaje_frontal.png").convert_alpha()
+    img_izq = pygame.image.load("assets/personaje/personaje_retroceso.png").convert_alpha()
+    img_der = pygame.image.load("assets/personaje/personaje_avanzando.png").convert_alpha()
+
+    img_actual = img_abajo
 
     # Este es el bucle principal del juego, todo lo que sucede en el juego
     # está aquí.
@@ -406,12 +441,12 @@ def main():
                             pygame.mixer.music.play(-1)
                             cancion_actual = "assets/Musica/musica_2.mp3"
 
-                        tablero, pos_jugador, pos_enemigo = reiniciar()
+                        tablero, pos_jugador, pos_enemigos = reiniciar()
                         direccion = (0, 0)
                         # Obtiene tiempo en milisegundos
                         tiempo_ultimo_mov = pygame.time.get_ticks()
                         estado = ESTADO_JUGANDO
-                        refrescar_tablero(screen, tablero)
+                        refrescar_tablero(screen, tablero, img_actual)
                     elif evento.key == pygame.K_i:
                         estado = ESTADO_INSTRUCCIONES
                         mostrar_pantalla(screen, PANTALLA_INSTRUCCIONES)
@@ -433,7 +468,7 @@ def main():
                         direccion = (0, 0)
                         tiempo_ultimo_mov = pygame.time.get_ticks()
                         estado = ESTADO_JUGANDO
-                        refrescar_tablero(screen, tablero)
+                        refrescar_tablero(screen, tablero, img_actual)
 
                     if evento.key == pygame.K_ESCAPE:
                         if cancion_actual != "assets/Musica/musica_1.mp3":
@@ -444,34 +479,52 @@ def main():
                         estado = ESTADO_INICIO
                         mostrar_pantalla(screen, PANTALLA_INICIO)
 
-                elif estado == ESTADO_JUGANDO:
-                    if evento.key == pygame.K_w:
-                        direccion = (0, -1)
-                    elif evento.key == pygame.K_s:
-                        direccion = (0, 1)
-                    elif evento.key == pygame.K_a:
-                        direccion = (-1, 0)
-                    elif evento.key == pygame.K_d:
-                        direccion = (1, 0)
+                if estado == ESTADO_JUGANDO:
+                    direccion = cambiar_direccion(pygame.key.get_pressed(), direccion)
 
-                    pos_enemigo = avanzar_enemigo(tablero, pos_enemigo)
-                    refrescar_tablero(screen, tablero)
-                    resultado, pos_jugador = avanzar(tablero, pos_jugador, direccion)
+                    tiempo_actual = pygame.time.get_ticks()
+
+                    if tiempo_actual - tiempo_ultimo_mov >= RETRASO:
+                        resultado, pos_jugador = avanzar(tablero, pos_jugador, direccion)
             
-                    if resultado == "derrota":
-                        if cancion_actual != "assets/Musica/musica_derrota.mp3":
-                            pygame.mixer.music.load("assets/Musica/musica_derrota.mp3")
-                            pygame.mixer.music.play(0)
-                            cancion_actual = "assets/Musica/musica_derrota.mp3"
-                        estado = ESTADO_DERROTA
-                        mostrar_pantalla(screen, PANTALLA_DERROTA)
-                    elif resultado == "victoria":
-                        if cancion_actual != "assets/Musica/musica_victoria.mp3":
-                            pygame.mixer.music.load("assets/Musica/musica_victoria.mp3")
-                            pygame.mixer.music.play(0)
-                            cancion_actual = "assets/Musica/musica_victoria.mp3"
-                        estado = ESTADO_VICTORIA
-                        mostrar_pantalla(screen, PANTALLA_VICTORIA)
+                        tiempo_ultimo_mov = tiempo_actual
+                        
+                        # cambio de imagen segun direccion actual
+                        if direccion == (0 , -1) :
+                            img_actual = img_arriba
+                        elif direccion == (0 , 1) :
+                            img_actual = img_abajo
+                        elif direccion == ( -1 , 0) :
+                            img_actual = img_izq
+                        elif direccion == (1 , 0) :
+                            img_actual = img_der
+
+                        if resultado == "derrota":
+                            if cancion_actual != "assets/Musica/musica_derrota.mp3":
+                                pygame.mixer.music.load("assets/Musica/musica_derrota.mp3")
+                                pygame.mixer.music.play(0)
+                                cancion_actual = "assets/Musica/musica_derrota.mp3"
+                            estado = ESTADO_DERROTA
+                            mostrar_pantalla(screen, PANTALLA_DERROTA)
+                        elif resultado == "victoria":
+                            if cancion_actual != "assets/Musica/musica_victoria.mp3":
+                                pygame.mixer.music.load("assets/Musica/musica_victoria.mp3")
+                                pygame.mixer.music.play(0)
+                                cancion_actual = "assets/Musica/musica_victoria.mp3"
+                            estado = ESTADO_VICTORIA
+                            mostrar_pantalla(screen, PANTALLA_VICTORIA)
+                        else:
+                            tiempo_ultimo_mov = tiempo_actual
+                            
+            
+        if estado == ESTADO_JUGANDO:
+            tiempo_actual_enemigos = pygame.time.get_ticks()
+
+            if tiempo_actual_enemigos - tiempo_enemigos >= RETRASO_ENEMIGOS_PRIMER:
+                pos_enemigos = avanzar_enemigos(tablero, pos_enemigos)
+                refrescar_tablero(screen, tablero, img_actual)
+                tiempo_enemigos = tiempo_actual_enemigos
+                
     pygame.quit()
 
 
