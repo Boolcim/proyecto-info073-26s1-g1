@@ -24,17 +24,20 @@ PANTALLA_NIVEL2 = "fondo_2.jpeg"
 PANTALLA_NIVEL3 = "fondo_3.jpeg"
 
 # Para evitar que el jugador se mueva demasiado rápido
-RETRASO = 200
+RETRASO = 150
 
-RETRASO_ENEMIGOS_PRIMER = 500
+# Velocidad del movimiento de los enemigos (en milisegundos)
+RETRASO_ENEMIGOS_PRIMER = 250
 
 # Códigos de cada elemento del tablero
 VACIO = 0
 OBSTACULO = 1
 JUGADOR = 2
 MANZANA = 3
+AGRANDAR = 4
+CANT_AGRANDAR = 3
 
-CANT_ENEMIGOS = 2
+CANT_ENEMIGOS = 4
 
 largo_victoria = 5
 
@@ -121,8 +124,19 @@ def poblar_tablero(tablero):
     """
     aparecer_aleatorio(tablero, MANZANA)
 
+def dibujar_panel(screen, fuente, objetos_conseguidos):
+    panel = pygame.Rect(LADO_TABLERO, 0, ANCHO_PANEL, ALTO_VENTANA)
+    pygame.draw.rect(screen, "gray15", panel)
 
-def refrescar_tablero(screen, tablero, img_personaje):
+    x = LADO_TABLERO + 24
+
+    titulo = fuente.render("MI JUEGO", True, "white")
+    screen.blit(titulo, (x, 30))
+
+    objetos_txt = fuente.render(f"Objetos: {objetos_conseguidos}/{CANT_AGRANDAR}", True, "gold")
+    screen.blit(objetos_txt, (x, 100))
+
+def refrescar_tablero(screen, tablero, img_personaje, fuente, objetos_conseguidos, escala_jugador):
     """
     Dibuja el estado actual del tablero en la pantalla.
 
@@ -134,7 +148,7 @@ def refrescar_tablero(screen, tablero, img_personaje):
     # Rellena la pantalla con el color gris, básicamente pintando
     # por encima de lo que estaba anteriormente.
     imagen = pygame.image.load("assets/fondos/fondo_1.jpeg").convert()
-    imagen = pygame.transform.scale(imagen, screen.get_size())
+    imagen = pygame.transform.scale(imagen, (LADO_TABLERO, LADO_TABLERO))
 
     # Dibujamos la imagen en la pantalla en la coordenada (0, 0).
     screen.blit(imagen, (0, 0))
@@ -147,8 +161,8 @@ def refrescar_tablero(screen, tablero, img_personaje):
     # como el ancho (screen.get_width()) por la cantidad de filas y columnas respectivamente.
     # Por ejemplo en este caso alto_elem sería 800 / 15 = 53.3, lo que nos indica que la
     # altura de cada elemento es de 53.3 píxeles.
-    alto_elem = screen.get_height() / FILAS
-    ancho_elem = screen.get_width() / COLUMNAS
+    alto_elem = LADO_TABLERO / FILAS
+    ancho_elem = LADO_TABLERO / COLUMNAS
     # Como el jugador es un círculo, se necesita el radio.
     radio = ancho_elem / 2
 
@@ -166,7 +180,12 @@ def refrescar_tablero(screen, tablero, img_personaje):
             elif tablero[i][j] == JUGADOR:
                 # Dibujamos un círculo verde en la posición (pos_x + radio, pos_y + radio),
                 # con un radio definido por la variable "radio" (ancho_elem / 2).
-                screen.blit(img_personaje, [ pos_x , pos_y ])
+                ancho_img = int(ancho_elem * escala_jugador)
+                alto_img = int(alto_elem * escala_jugador)
+                img_escalada = pygame.transform.scale(img_personaje, (ancho_img, alto_img))
+                offset_x = (ancho_img - ancho_elem) / 2
+                offset_y = (alto_img - alto_elem) / 2
+                screen.blit(img_escalada, [pos_x - offset_x, pos_y - offset_y])
             elif tablero[i][j] == MANZANA:
                 pygame.draw.rect(
                     screen,
@@ -174,10 +193,28 @@ def refrescar_tablero(screen, tablero, img_personaje):
                     # Acá reducimos el tamaño del rectángulo
                     # para identificarlo más fácilmente
                     pygame.Rect(
-                        (pos_x + 10, pos_y + 10),
-                        (ancho_elem - 20, alto_elem - 20),
+                        (pos_x + 15, pos_y + 15),
+                        (ancho_elem - 30, alto_elem - 30),
                     ),
                 )
+            elif tablero[i][j] == AGRANDAR:
+                pygame.draw.rect(
+                    screen,
+                    "gold",
+                    pygame.Rect(
+                        (pos_x + 15, pos_y + 15),
+                (ancho_elem - 30, alto_elem - 30),
+                    ),
+                )
+            elif tablero[i][j] == AGRANDAR:
+                pygame.draw.rect(
+                    screen,
+                    "gold",
+                    pygame.Rect(
+                        (pos_x + 15, pos_y + 15),
+                (ancho_elem - 30, alto_elem - 30),
+                    ),
+                )   
 
             # Estamos recorriendo los píxeles de la pantalla, por lo que
             # debemos sumar el ancho y altura en pixeles de cada elemento que
@@ -186,6 +223,7 @@ def refrescar_tablero(screen, tablero, img_personaje):
         pos_y += alto_elem
 
     # Refresca el contenido que se ve en pantalla.
+    dibujar_panel(screen, fuente, objetos_conseguidos)
     pygame.display.flip()
 
 def mover_enemigo():
@@ -260,7 +298,7 @@ def cambiar_direccion(keys, direccion_actual):
     # será la misma que la anterior.
     return direccion_actual
 
-def avanzar(tablero, pos_jugador, direccion):
+def avanzar(tablero, pos_jugador, direccion, objetos_conseguidos):
     """
     Avanza el jugador un paso en la dirección dada.
 
@@ -297,7 +335,16 @@ def avanzar(tablero, pos_jugador, direccion):
         return "derrota", pos_jugador
 
     if pos_elem == MANZANA:
-        return "victoria", (ind_nueva_col, ind_nueva_fila)
+        if objetos_conseguidos >= CANT_AGRANDAR:
+            return "victoria", (ind_nueva_col, ind_nueva_fila)
+        else:
+            # Aún no consigue los 3 objetos, no puede pasar por la manzana
+            return "ok", pos_jugador
+    
+    if pos_elem == AGRANDAR:
+        tablero[ind_actual_fila][ind_actual_col] = VACIO
+        tablero[ind_nueva_fila][ind_nueva_col] = JUGADOR
+        return "agrandar", (ind_nueva_col, ind_nueva_fila)
 
     # Movimiento normal, si es que no encontramos manzana ni obstáculo.
     tablero[ind_actual_fila][ind_actual_col] = VACIO
@@ -349,17 +396,21 @@ def reiniciar():
     # Otra manera usando comprensión de listas:
     # tablero = [[VACIO] * COLUMNAS for _ in range(FILAS)]
     # El _ en el "for" indica que no usamos la variable con la que iteramos.
+    
+    # Colocamos al jugador en la posición (1, 10) del tablero.
+    tablero[10][1] = JUGADOR 
+    pos_jugador = (1, 10)
 
+    # Colocamos los enemigos en posiciones aleatorias del tablero.
     pos_enemigos = []
 
     for _ in range(CANT_ENEMIGOS):
         pos_enemigos.append(aparecer_aleatorio(tablero, OBSTACULO))
 
+    for _ in range(CANT_AGRANDAR):
+        aparecer_aleatorio(tablero, AGRANDAR)
+    
     aparecer_aleatorio(tablero, MANZANA)
-
-    # Colocamos al jugador en una posición aleatoria.
-    tablero[10][1] = JUGADOR 
-    pos_jugador = (1, 10)
 
     return tablero, pos_jugador, pos_enemigos
 
@@ -393,9 +444,10 @@ def mostrar_pantalla(screen, nombre_archivo):
 
 def main():
     pygame.init()
+    fuente = pygame.font.Font(None, 36)
 
     # Establecemos la resolución de la pantalla.
-    screen = pygame.display.set_mode((800, 800))
+    screen = pygame.display.set_mode((ANCHO_VENTANA, ALTO_VENTANA))
 
     # Establecemos el título de la ventana.
     pygame.display.set_caption("Juego Básico")
@@ -410,6 +462,8 @@ def main():
     tablero = []
     pos_jugador = (0, 0)
     direccion = (0, 0)
+    escala_jugador = 1.0
+    objetos_conseguidos = 0
     tiempo_ultimo_mov = 0
     tiempo_enemigos = 0
     mostrar_pantalla(screen, PANTALLA_INICIO)
@@ -446,7 +500,7 @@ def main():
                         # Obtiene tiempo en milisegundos
                         tiempo_ultimo_mov = pygame.time.get_ticks()
                         estado = ESTADO_JUGANDO
-                        refrescar_tablero(screen, tablero, img_actual)
+                        refrescar_tablero(screen, tablero, img_actual, fuente, objetos_conseguidos, escala_jugador)
                     elif evento.key == pygame.K_i:
                         estado = ESTADO_INSTRUCCIONES
                         mostrar_pantalla(screen, PANTALLA_INSTRUCCIONES)
@@ -466,9 +520,11 @@ def main():
                         tablero, pos_jugador, pos_enemigos = reiniciar()
                         pasos = 0
                         direccion = (0, 0)
+                        escala_jugador = 1.0
+                        objetos_conseguidos = 0
                         tiempo_ultimo_mov = pygame.time.get_ticks()
                         estado = ESTADO_JUGANDO
-                        refrescar_tablero(screen, tablero, img_actual)
+                        refrescar_tablero(screen, tablero, img_actual, fuente, objetos_conseguidos, escala_jugador)
 
                     if evento.key == pygame.K_ESCAPE:
                         if cancion_actual != "assets/Musica/musica_1.mp3":
@@ -486,7 +542,7 @@ def main():
                         tiempo_actual = pygame.time.get_ticks()
 
                         if tiempo_actual - tiempo_ultimo_mov >= RETRASO:
-                            resultado, pos_jugador = avanzar(tablero, pos_jugador, direccion)
+                            resultado, pos_jugador = avanzar(tablero, pos_jugador, direccion, objetos_conseguidos)
             
                             tiempo_ultimo_mov = tiempo_actual
                         
@@ -514,6 +570,9 @@ def main():
                                     cancion_actual = "assets/Musica/musica_victoria.mp3"
                                 estado = ESTADO_VICTORIA
                                 mostrar_pantalla(screen, PANTALLA_VICTORIA)
+                            elif resultado == "agrandar":
+                                objetos_conseguidos += 1
+                                escala_jugador += 0.3
                             else:
                                 tiempo_ultimo_mov = tiempo_actual
                             
@@ -523,7 +582,7 @@ def main():
 
             if tiempo_actual_enemigos - tiempo_enemigos >= RETRASO_ENEMIGOS_PRIMER:
                 pos_enemigos = avanzar_enemigos(tablero, pos_enemigos)
-                refrescar_tablero(screen, tablero, img_actual)
+                refrescar_tablero(screen, tablero, img_actual, fuente, objetos_conseguidos, escala_jugador)
                 tiempo_enemigos = tiempo_actual_enemigos
                 
     pygame.quit()
