@@ -5,3 +5,4 @@ Los cambios realizados para el entregable final fueron:
 3. La ventana del juego pasó de ser un cuadrado (800 x 800) a un rectángulo (1040 x 800), dejando un panel lateral con información.
 4. Se agregaron 3 objetos nuevos en el tablero que al ser tocados por el jugador aumentan su tamaño.
 5. Se modificaron las velocidades del personaje y los enemigos para que avancen un poco más rápido.
+6. El jugador no podrá tocar la manzana hasta que consiga todos los objetos.

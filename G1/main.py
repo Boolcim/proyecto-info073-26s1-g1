@@ -497,6 +497,8 @@ def main():
 
                         tablero, pos_jugador, pos_enemigos = reiniciar()
                         direccion = (0, 0)
+                        escala_jugador = 1.0
+                        objetos_conseguidos = 0 
                         # Obtiene tiempo en milisegundos
                         tiempo_ultimo_mov = pygame.time.get_ticks()
                         estado = ESTADO_JUGANDO
@@ -532,6 +534,8 @@ def main():
                             pygame.mixer.music.play(-1)
                             cancion_actual = "assets/Musica/musica_1.mp3"
 
+                        escala_jugador = 1.0
+                        objetos_conseguidos = 0
                         estado = ESTADO_INICIO
                         mostrar_pantalla(screen, PANTALLA_INICIO)
 
