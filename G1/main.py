@@ -463,7 +463,7 @@ def main():
                             pygame.mixer.music.play(-1)
                             cancion_actual = "assets/Musica/musica_2.mp3"
 
-                        tablero, pos_jugador, pos_enemigo = reiniciar()
+                        tablero, pos_jugador, pos_enemigos = reiniciar()
                         pasos = 0
                         direccion = (0, 0)
                         tiempo_ultimo_mov = pygame.time.get_ticks()
@@ -480,41 +480,42 @@ def main():
                         mostrar_pantalla(screen, PANTALLA_INICIO)
 
                 if estado == ESTADO_JUGANDO:
-                    direccion = cambiar_direccion(pygame.key.get_pressed(), direccion)
+                    if evento.key in (pygame.K_w, pygame.K_a, pygame.K_s, pygame.K_d):
+                        direccion = cambiar_direccion(pygame.key.get_pressed(), direccion)
 
-                    tiempo_actual = pygame.time.get_ticks()
+                        tiempo_actual = pygame.time.get_ticks()
 
-                    if tiempo_actual - tiempo_ultimo_mov >= RETRASO:
-                        resultado, pos_jugador = avanzar(tablero, pos_jugador, direccion)
+                        if tiempo_actual - tiempo_ultimo_mov >= RETRASO:
+                            resultado, pos_jugador = avanzar(tablero, pos_jugador, direccion)
             
-                        tiempo_ultimo_mov = tiempo_actual
-                        
-                        # cambio de imagen segun direccion actual
-                        if direccion == (0 , -1) :
-                            img_actual = img_arriba
-                        elif direccion == (0 , 1) :
-                            img_actual = img_abajo
-                        elif direccion == ( -1 , 0) :
-                            img_actual = img_izq
-                        elif direccion == (1 , 0) :
-                            img_actual = img_der
-
-                        if resultado == "derrota":
-                            if cancion_actual != "assets/Musica/musica_derrota.mp3":
-                                pygame.mixer.music.load("assets/Musica/musica_derrota.mp3")
-                                pygame.mixer.music.play(0)
-                                cancion_actual = "assets/Musica/musica_derrota.mp3"
-                            estado = ESTADO_DERROTA
-                            mostrar_pantalla(screen, PANTALLA_DERROTA)
-                        elif resultado == "victoria":
-                            if cancion_actual != "assets/Musica/musica_victoria.mp3":
-                                pygame.mixer.music.load("assets/Musica/musica_victoria.mp3")
-                                pygame.mixer.music.play(0)
-                                cancion_actual = "assets/Musica/musica_victoria.mp3"
-                            estado = ESTADO_VICTORIA
-                            mostrar_pantalla(screen, PANTALLA_VICTORIA)
-                        else:
                             tiempo_ultimo_mov = tiempo_actual
+                        
+                            # cambio de imagen segun direccion actual
+                            if direccion == (0 , -1) :
+                                img_actual = img_arriba
+                            elif direccion == (0 , 1) :
+                                img_actual = img_abajo
+                            elif direccion == ( -1 , 0) :
+                                img_actual = img_izq
+                            elif direccion == (1 , 0) :
+                                img_actual = img_der
+
+                            if resultado == "derrota":
+                                if cancion_actual != "assets/Musica/musica_derrota.mp3":
+                                    pygame.mixer.music.load("assets/Musica/musica_derrota.mp3")
+                                    pygame.mixer.music.play(0)
+                                    cancion_actual = "assets/Musica/musica_derrota.mp3"
+                                estado = ESTADO_DERROTA
+                                mostrar_pantalla(screen, PANTALLA_DERROTA)
+                            elif resultado == "victoria":
+                                if cancion_actual != "assets/Musica/musica_victoria.mp3":
+                                    pygame.mixer.music.load("assets/Musica/musica_victoria.mp3")
+                                    pygame.mixer.music.play(0)
+                                    cancion_actual = "assets/Musica/musica_victoria.mp3"
+                                estado = ESTADO_VICTORIA
+                                mostrar_pantalla(screen, PANTALLA_VICTORIA)
+                            else:
+                                tiempo_ultimo_mov = tiempo_actual
                             
             
         if estado == ESTADO_JUGANDO:
