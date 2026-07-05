@@ -125,6 +125,7 @@ def poblar_tablero(tablero):
     aparecer_aleatorio(tablero, MANZANA)
 
 def dibujar_panel(screen, fuente, objetos_conseguidos):
+    # Dibuja el panel lateral con información del juego.
     panel = pygame.Rect(LADO_TABLERO, 0, ANCHO_PANEL, ALTO_VENTANA)
     pygame.draw.rect(screen, "gray15", panel)
 
@@ -201,6 +202,7 @@ def refrescar_tablero(screen, tablero, img_personaje, fuente, objetos_conseguido
                 pygame.draw.rect(
                     screen,
                     "gold",
+                    # Objeto que al ser tocado aumenta el tamaño del jugador.
                     pygame.Rect(
                         (pos_x + 15, pos_y + 15),
                 (ancho_elem - 30, alto_elem - 30),
@@ -234,12 +236,10 @@ def mover_enemigo():
         (1, 0)    # derecha
     ])
 
-
 def avanzar_enemigos(tablero, pos_enemigos):
-    print(pos_enemigos)
+    # Mueve a cada enemigo un paso en una dirección aleatoria.
     for i in range(len(pos_enemigos)):
         pos_enemigo = pos_enemigos[i]
-        print(pos_enemigo)
 
         col, fila = pos_enemigo
 
@@ -256,8 +256,6 @@ def avanzar_enemigos(tablero, pos_enemigos):
                 tablero[nueva_fila][nueva_col] = OBSTACULO
                 pos_enemigos[i] = (nueva_col, nueva_fila)
 
-                
-    print("AAAAA " +str(pos_enemigos))
     return pos_enemigos
 
 def cambiar_direccion(keys, direccion_actual):
@@ -342,6 +340,7 @@ def avanzar(tablero, pos_jugador, direccion, objetos_conseguidos):
             return "ok", pos_jugador
     
     if pos_elem == AGRANDAR:
+        # Si el jugador encuentra un objeto de agrandar, lo recoge y se agranda.
         tablero[ind_actual_fila][ind_actual_col] = VACIO
         tablero[ind_nueva_fila][ind_nueva_col] = JUGADOR
         return "agrandar", (ind_nueva_col, ind_nueva_fila)
@@ -408,8 +407,10 @@ def reiniciar():
         pos_enemigos.append(aparecer_aleatorio(tablero, OBSTACULO))
 
     for _ in range(CANT_AGRANDAR):
+        # Colocamos los objetos que agrandan al jugador en posiciones aleatorias.
         aparecer_aleatorio(tablero, AGRANDAR)
     
+    # Colocamos la manzana en una posición aleatoria del tablero.
     aparecer_aleatorio(tablero, MANZANA)
 
     return tablero, pos_jugador, pos_enemigos
