@@ -208,15 +208,6 @@ def refrescar_tablero(screen, tablero, img_personaje, fuente, objetos_conseguido
                 (ancho_elem - 30, alto_elem - 30),
                     ),
                 )
-            elif tablero[i][j] == AGRANDAR:
-                pygame.draw.rect(
-                    screen,
-                    "gold",
-                    pygame.Rect(
-                        (pos_x + 15, pos_y + 15),
-                (ancho_elem - 30, alto_elem - 30),
-                    ),
-                )   
 
             # Estamos recorriendo los píxeles de la pantalla, por lo que
             # debemos sumar el ancho y altura en pixeles de cada elemento que
@@ -333,6 +324,7 @@ def avanzar(tablero, pos_jugador, direccion, objetos_conseguidos):
         return "derrota", pos_jugador
 
     if pos_elem == MANZANA:
+        # Si el jugador toca la manzana, verifica si ya consiguió los 3 objetos de agrandar. (Generado con ayuda de IA (Claude))
         if objetos_conseguidos >= CANT_AGRANDAR:
             return "victoria", (ind_nueva_col, ind_nueva_fila)
         else:
@@ -340,7 +332,7 @@ def avanzar(tablero, pos_jugador, direccion, objetos_conseguidos):
             return "ok", pos_jugador
     
     if pos_elem == AGRANDAR:
-        # Si el jugador encuentra un objeto de agrandar, lo recoge y se agranda.
+        # Si el jugador encuentra un objeto de agrandar, lo recoge y se agranda. (Generado con ayuda de IA (Claude))
         tablero[ind_actual_fila][ind_actual_col] = VACIO
         tablero[ind_nueva_fila][ind_nueva_col] = JUGADOR
         return "agrandar", (ind_nueva_col, ind_nueva_fila)
