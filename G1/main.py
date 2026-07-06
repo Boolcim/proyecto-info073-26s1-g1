@@ -220,6 +220,7 @@ def refrescar_tablero(screen, tablero, img_personaje, fuente, objetos_conseguido
     pygame.display.flip()
 
 def mover_enemigo():
+    # Retorna una dirección aleatoria para el movimiento de un enemigo.
     return random.choice([
         (0, -1),  # arriba
         (0, 1),   # abajo
@@ -321,6 +322,7 @@ def avanzar(tablero, pos_jugador, direccion, objetos_conseguidos):
     pos_elem = tablero[ind_nueva_fila][ind_nueva_col]
 
     if pos_elem == OBSTACULO:
+        # Si el jugador choca con un obstáculo, pierde.
         return "derrota", pos_jugador
 
     if pos_elem == MANZANA:
