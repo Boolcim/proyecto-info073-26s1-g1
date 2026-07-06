@@ -6,3 +6,4 @@ Los cambios realizados para el entregable final fueron:
 4. Se agregaron 3 objetos nuevos en el tablero que al ser tocados por el jugador aumentan su tamaño.
 5. Se modificaron las velocidades del personaje y los enemigos para que avancen un poco más rápido.
 6. El jugador no podrá tocar la manzana hasta que consiga todos los objetos.
+7. Modificación en la pantalla de instrucciones para indicar mejor cómo jugar.
